@@ -68,16 +68,16 @@ pub async fn search_book(query: &str) -> Result<Vec<Book>, BookshelfError> {
     let client = reqwest::Client::new();
     let results: RawResponse = client
         .get(url)
-        .query(&[("q", query), ("fields", "key, title, author_name"), ("limit", "10")])
+        .query(&[
+            ("q", query),
+            ("fields", "key, title, author_name"),
+            ("limit", "10"),
+        ])
         .send()
         .await?
         .json()
         .await?;
-    let books = results
-        .docs
-        .into_iter()
-        .map(|doc| Book::from(doc))
-        .collect();
+    let books = results.docs.into_iter().map(Book::from).collect();
     leptos::log!("{books:?}");
     Ok(books)
 }

@@ -1,8 +1,7 @@
-use leptos::{html::Form, *};
+use leptos::*;
 
 mod bookshelf;
 use bookshelf::*;
-use serde::{Deserialize, Serialize};
 fn main() {
     mount_to_body(move |cx| view! {cx, <Bookshelf /> })
 }
@@ -28,7 +27,9 @@ fn Bookshelf(cx: Scope) -> impl IntoView {
 
 #[component]
 fn BookSearch<F>(cx: Scope, on_add_book: F) -> impl IntoView
-where F: Fn(Book) + 'static + Copy {
+where
+    F: Fn(Book) + 'static + Copy,
+{
     let (query, set_query) = create_signal(cx, String::new());
     let (is_searching, set_is_searching) = create_signal(cx, false);
     let search = move |_query: String| {
@@ -53,7 +54,8 @@ where F: Fn(Book) + 'static + Copy {
 
 #[component]
 fn BookSearchResults<F>(cx: Scope, query: ReadSignal<String>, on_add_book: F) -> impl IntoView
-where F: Fn(Book) + 'static + Copy
+where
+    F: Fn(Book) + 'static + Copy,
 {
     let search_results = create_resource(cx, query, |query| async move {
         let query = query.clone();
