@@ -1,0 +1,5 @@
+[build]
+release = true
+dist = "docs"
+public_url = "/bookshelf-leptos"
+
