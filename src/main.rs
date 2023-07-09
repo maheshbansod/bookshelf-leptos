@@ -27,12 +27,38 @@ fn Bookshelf(cx: Scope) -> impl IntoView {
         <BookSearch on_add_book=on_add_book/>
         <h1>"Bookshelf"</h1>
         <hr/>
-        <input type="text" placeholder="Search books in the bookshelf" />
+        <BookList books=Signal::derive(cx, move || bookshelf.get().books().to_vec()) />
+    }
+}
+
+#[component]
+fn BookList(cx: Scope, #[prop(into)] books: Signal<Vec<Book>>) -> impl IntoView {
+    let (query, set_query) = create_signal(cx, String::new());
+    let books = move || {
+        books
+            .get()
+            .clone()
+            .into_iter()
+            .filter(|book| {
+                book.title()
+                    .clone()
+                    .to_lowercase()
+                    .contains(&query.get().to_lowercase())
+            })
+            .collect::<Vec<_>>()
+    };
+    view! {cx,
+        <input 
+            type="text" 
+            placeholder="Search books in the bookshelf"
+            on:input=move |e| set_query(event_target_value(&e))
+            prop:value=query
+        />
         <For
-            each=move || bookshelf().books().clone()
+            each=move || books()
             key=|book| book.id().clone()
             view=move |cx, book| view! {cx, <Book book />}
-                />
+        />
     }
 }
 
@@ -71,10 +97,14 @@ fn BookSearchResults<F>(cx: Scope, query: ReadSignal<String>, on_add_book: F) ->
 where
     F: Fn(Book) + 'static + Copy,
 {
-    let search_results = create_resource(cx, || (), move |_| async move {
-        let query = query.get_untracked();
-        search_book(&query).await
-    });
+    let search_results = create_resource(
+        cx,
+        || (),
+        move |_| async move {
+            let query = query.get_untracked();
+            search_book(&query).await
+        },
+    );
     view! {cx,
         <Suspense fallback=move || view! {cx, "Loading..."}>
             {move || search_results.read(cx).map(|result| match result {
