@@ -50,6 +50,7 @@ fn BookList(cx: Scope, #[prop(into)] books: Signal<Vec<Book>>) -> impl IntoView 
     view! {cx,
         <input 
             type="text" 
+            class="bookshelf_search"
             placeholder="Search books in the bookshelf"
             on:input=move |e| set_query(event_target_value(&e))
             prop:value=query
