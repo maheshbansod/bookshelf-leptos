@@ -1,0 +1,59 @@
+<!DOCTYPE html><html><head>
+<title>Bookshelf</title>
+
+<link rel="preload" href="/bookshelf-leptos-925f5fa72baadd54_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/bookshelf-leptos-925f5fa72baadd54.js"></head>
+<body>
+<style>
+* {
+	font-family: Arial;
+	margin:0;
+	padding:0;
+}
+.bookshelf_search {
+	margin: 10px;
+	font-size: larger;
+	min-width: 50%;
+	padding: 5px;
+}
+.book {
+	display: flex;
+	margin: 20px 10px;
+	max-width: 1000px;
+}
+.book img.cover {
+	width: 80px;
+	min-height: 128px;
+	border: 1px solid grey;
+}
+.book .book_info {
+	margin: 0 10px;
+	flex: 1;
+}
+.close-btn {
+	font-family: monospace;
+	font-weight: bolder;
+	background: red;
+	color: white;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border-radius: 10px;
+}
+.book .first_publish_year {
+	font-size: smaller;
+	color: grey;
+	margin-left: 10px;
+}
+.book .book_title {
+	font-size: larger;
+}
+.book .authors {
+	color: grey;
+	font-style: italic;
+}
+</style>
+
+<script type="module">import init from '/bookshelf-leptos-925f5fa72baadd54.js';init('/bookshelf-leptos-925f5fa72baadd54_bg.wasm');</script></body></html>
