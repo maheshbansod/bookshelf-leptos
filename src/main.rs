@@ -18,6 +18,9 @@ fn Bookshelf(cx: Scope) -> impl IntoView {
     let on_add_book = move |book: Book| {
         set_bookshelf.update(|bookshelf| bookshelf.add_book(book));
     };
+    let remove_book = move |id: String| {
+        set_bookshelf.update(|bookshelf| bookshelf.remove_book(id));
+    };
     create_effect(cx, move |_| {
         if let Err(err) = gloo_storage::LocalStorage::set(BOOKSHELF_STORAGE_KEY, bookshelf.get()) {
             error!("Couldn't write to LocalStorage.\n{err:?}");
@@ -27,12 +30,16 @@ fn Bookshelf(cx: Scope) -> impl IntoView {
         <BookSearch on_add_book=on_add_book/>
         <h1>"Bookshelf"</h1>
         <hr/>
-        <BookList books=Signal::derive(cx, move || bookshelf.get().books().to_vec()) />
+        <BookList
+            books=Signal::derive(cx, move || bookshelf.get().books().to_vec())
+            on_remove=remove_book
+        />
     }
 }
 
 #[component]
-fn BookList(cx: Scope, #[prop(into)] books: Signal<Vec<Book>>) -> impl IntoView {
+fn BookList<F>(cx: Scope, #[prop(into)] books: Signal<Vec<Book>>, on_remove: F) -> impl IntoView
+where F: Fn(String) + 'static + Copy {
     let (query, set_query) = create_signal(cx, String::new());
     let books = move || {
         books
@@ -58,7 +65,7 @@ fn BookList(cx: Scope, #[prop(into)] books: Signal<Vec<Book>>) -> impl IntoView 
         <For
             each=move || books()
             key=|book| book.id().clone()
-            view=move |cx, book| view! {cx, <Book book />}
+            view=move |cx, book| view! {cx, <Book book on_remove />}
         />
     }
 }
@@ -125,7 +132,14 @@ where
 }
 
 #[component]
-fn Book(cx: Scope, book: Book) -> impl IntoView {
+fn Book<F>(cx: Scope, book: Book,
+    on_remove: F
+) -> impl IntoView
+where F: Fn(String) + 'static + Copy {
+    let book_id = book.id().to_string();
+    let remove_book = move |_| {
+        on_remove(book_id.clone());
+    };
     view! {cx,
         <div class="book">
             <img class="cover" src={book.cover_src().clone().map(|c| c.get().clone()).unwrap_or("x".to_string())} alt="Book cover" />
@@ -141,6 +155,11 @@ fn Book(cx: Scope, book: Book) -> impl IntoView {
                     <span class="author">{author}</span>
                     {(i > 1 && i != book.authors().len()).then_some(" | ")}
                 }).collect_view(cx)}</p>
+            </div>
+            <div
+                on:click=remove_book
+                class="close-btn">
+                x
             </div>
         </div>
     }

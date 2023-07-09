@@ -41,6 +41,11 @@ impl Bookshelf {
         leptos::log!("Adding book: {:?} in {:?}", book, self.books());
         self.books.push(book);
     }
+
+    pub fn remove_book(&mut self, id: String) {
+        leptos::log!("Removing book: {:?} from {:?}", id, self.books());
+        self.books.retain(|book| book.id != id);
+    }
 }
 
 impl From<RawResponseDoc> for Book {
