@@ -12,10 +12,24 @@ pub struct Bookshelf {
 #[getset(get = "pub")]
 pub struct Book {
     id: String,
-    cover_src: String,
+    cover_src: Option<CoverSrc>,
     title: String,
     authors: Vec<String>,
-    description: String,
+    first_publish_year: u16,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct CoverSrc(String);
+impl From<u32> for CoverSrc {
+    fn from(value: u32) -> Self {
+        CoverSrc(format!("https://covers.openlibrary.org/w/id/{value}-M.jpg"))
+    }
+}
+
+impl CoverSrc {
+    pub fn get(&self) -> &String {
+        &self.0
+    }
 }
 
 impl Bookshelf {
@@ -35,7 +49,8 @@ impl From<RawResponseDoc> for Book {
             id: value.key,
             title: value.title,
             authors: value.author_name,
-            ..Book::default()
+            cover_src: value.cover_i.map(|c| c.into()),
+            first_publish_year: value.first_publish_year,
         }
     }
 }
@@ -45,6 +60,8 @@ struct RawResponseDoc {
     key: String,
     title: String,
     author_name: Vec<String>,
+    cover_i: Option<u32>,
+    first_publish_year: u16,
 }
 #[derive(Serialize, Deserialize)]
 struct RawResponse {
@@ -66,18 +83,29 @@ impl From<reqwest::Error> for BookshelfError {
 pub async fn search_book(query: &str) -> Result<Vec<Book>, BookshelfError> {
     let url = "https://openlibrary.org/search.json";
     let client = reqwest::Client::new();
-    let results: RawResponse = client
+    let results: Result<RawResponse, _> = client
         .get(url)
         .query(&[
             ("q", query),
-            ("fields", "key, title, author_name"),
+            (
+                "fields",
+                "key, first_publish_year, title, author_name, cover_i",
+            ),
             ("limit", "10"),
         ])
         .send()
         .await?
         .json()
-        .await?;
-    let books = results.docs.into_iter().map(Book::from).collect();
-    leptos::log!("{books:?}");
-    Ok(books)
+        .await;
+    match results {
+        Ok(results) => {
+            let books = results.docs.into_iter().map(Book::from).collect();
+            leptos::log!("{books:?}");
+            Ok(books)
+        }
+        Err(err) => {
+            leptos::error!("{err:?}");
+            Err(BookshelfError::RequestError)
+        }
+    }
 }

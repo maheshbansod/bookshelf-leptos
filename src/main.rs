@@ -82,7 +82,7 @@ where
                         </li>}).collect_view(cx)}</ul>
                 }.into_view(cx),
                     Err(err) => view! {cx,
-                        <p>"Error" {err.to_string()}</p>
+                        <p>"Error " {err.to_string()}</p>
                     }.into_view(cx)
             })}
         </Suspense>
@@ -93,11 +93,14 @@ where
 fn Book(cx: Scope, book: Book) -> impl IntoView {
     view! {cx,
         <div class="book">
-            <img class="cover" src={book.cover_src()} alt="Book cover" />
-            <div>
-                <h3>{book.title()}</h3>
-                <p>{book.authors().iter().map(|author| view! {cx, <span>{author}</span>"|"}).collect_view(cx)}</p>
-                <p>Description</p>
+            <img class="cover" src={book.cover_src().clone().map(|c| c.get().clone()).unwrap_or("x".to_string())} alt="Book cover" />
+            <div class="book_info">
+                <span class="book_title">{book.title()}</span>
+                <span class="first_publish_year">{book.first_publish_year().to_string()}</span>
+                <p class="authors">{book.authors().iter().enumerate().map(|(i,author)| view! {cx,
+                    <span class="author">{author}</span>
+                    {(i > 1 && i != book.authors().len()).then_some(" | ")}
+                }).collect_view(cx)}</p>
             </div>
         </div>
     }
