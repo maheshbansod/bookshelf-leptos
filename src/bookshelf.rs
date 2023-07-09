@@ -15,7 +15,7 @@ pub struct Book {
     cover_src: Option<CoverSrc>,
     title: String,
     authors: Vec<String>,
-    first_publish_year: u16,
+    first_publish_year: Option<u16>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -48,7 +48,7 @@ impl From<RawResponseDoc> for Book {
         Self {
             id: value.key,
             title: value.title,
-            authors: value.author_name,
+            authors: value.author_name.unwrap_or(vec![]),
             cover_src: value.cover_i.map(|c| c.into()),
             first_publish_year: value.first_publish_year,
         }
@@ -59,9 +59,9 @@ impl From<RawResponseDoc> for Book {
 struct RawResponseDoc {
     key: String,
     title: String,
-    author_name: Vec<String>,
+    author_name: Option<Vec<String>>,
     cover_i: Option<u32>,
-    first_publish_year: u16,
+    first_publish_year: Option<u16>,
 }
 #[derive(Serialize, Deserialize)]
 struct RawResponse {

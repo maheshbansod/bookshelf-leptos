@@ -50,7 +50,10 @@ where
         <input
             type="search"
             placeholder="Search books"
-            on:input=move |e| set_query(event_target_value(&e))
+            on:input=move |e| {
+                set_is_searching.set(false);
+                set_query(event_target_value(&e));
+            }
             prop:value=query
         />
         <button type="button" on:click=move |_| search(query.get()) >Search</button>
@@ -68,14 +71,15 @@ fn BookSearchResults<F>(cx: Scope, query: ReadSignal<String>, on_add_book: F) ->
 where
     F: Fn(Book) + 'static + Copy,
 {
-    let search_results = create_resource(cx, query, |query| async move {
-        let query = query.clone();
+    let search_results = create_resource(cx, || (), move |_| async move {
+        let query = query.get_untracked();
         search_book(&query).await
     });
     view! {cx,
         <Suspense fallback=move || view! {cx, "Loading..."}>
             {move || search_results.read(cx).map(|result| match result {
                 Ok(result) => view! {cx,
+                    <p>"Search results for '" {query} "'"</p>
                     <ul>{result.into_iter().map(|book| view! {cx, <li>
                         {book.title()}
                         <button type="button" on:click=move |_e| {on_add_book(book.clone())}>Add</button>
@@ -96,7 +100,12 @@ fn Book(cx: Scope, book: Book) -> impl IntoView {
             <img class="cover" src={book.cover_src().clone().map(|c| c.get().clone()).unwrap_or("x".to_string())} alt="Book cover" />
             <div class="book_info">
                 <span class="book_title">{book.title()}</span>
-                <span class="first_publish_year">{book.first_publish_year().to_string()}</span>
+                <span class="first_publish_year">
+                    {book
+                        .first_publish_year()
+                        .map(|y| y.to_string()).unwrap_or("".to_string())
+                    }
+                </span>
                 <p class="authors">{book.authors().iter().enumerate().map(|(i,author)| view! {cx,
                     <span class="author">{author}</span>
                     {(i > 1 && i != book.authors().len()).then_some(" | ")}
