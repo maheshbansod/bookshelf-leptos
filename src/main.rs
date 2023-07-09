@@ -1,3 +1,4 @@
+use gloo_storage::Storage;
 use leptos::*;
 
 mod bookshelf;
@@ -6,12 +7,22 @@ fn main() {
     mount_to_body(move |cx| view! {cx, <Bookshelf /> })
 }
 
+const BOOKSHELF_STORAGE_KEY: &str = "BOOKSHELF_STORAGE_KEY";
+
 #[component]
 fn Bookshelf(cx: Scope) -> impl IntoView {
-    let (bookshelf, set_bookshelf) = create_signal(cx, Bookshelf::new());
+    let (bookshelf, set_bookshelf) = create_signal(
+        cx,
+        gloo_storage::LocalStorage::get(BOOKSHELF_STORAGE_KEY).unwrap_or(Bookshelf::new()),
+    );
     let on_add_book = move |book: Book| {
         set_bookshelf.update(|bookshelf| bookshelf.add_book(book));
     };
+    create_effect(cx, move |_| {
+        if let Err(err) = gloo_storage::LocalStorage::set(BOOKSHELF_STORAGE_KEY, bookshelf.get()) {
+            error!("Couldn't write to LocalStorage.\n{err:?}");
+        }
+    });
     view! {cx,
         <BookSearch on_add_book=on_add_book/>
         <h1>"Bookshelf"</h1>

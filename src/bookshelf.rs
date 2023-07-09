@@ -2,7 +2,7 @@ use getset::Getters;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-#[derive(Getters, Clone)]
+#[derive(Getters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Bookshelf {
     books: Vec<Book>,
